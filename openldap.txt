@@ -1,0 +1,154 @@
+## OpenLDAP ##
+
+https://www.unix-power.net/networking/post-748
+http://sig9.hatenablog.com/entry/2017/11/14/000000
+https://qiita.com/s5601026/items/8c5f16a2935ccd7fb305
+https://serverfault.com/questions/437546/centos-openldap-cert-trust-issues
+
+https://www.server-world.info/query?os=CentOS_7&p=openldap&f=5
+
+centos75
+ldap_tls_reqcert = allow
+
+* phpOpenldap
+https://d.palmtb.net/2011/08/15/150308.html
+
+* Bug
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890127
+=> /usr/local/phpldapadmin-1.2.3/lib/functions.phpの対応
+
+* 11/23 phpldapadminインストール
+[root@centos74 ~]# rpm -qa | grep pcre
+pcre-8.32-17.el7.x86_64
+pcre2-10.23-2.el7.x86_64
+[root@centos74 ~]# rpm -qa | grep libxml
+libxml2-2.9.1-6.el7_2.3.x86_64
+perl-libxml-perl-0.08-19.el7.noarch
+libxml2-python-2.9.1-6.el7_2.3.x86_64
+[root@centos74 ~]#
+[root@centos74 ~]# rpm -qa | grep gettext
+gettext-devel-0.19.8.1-2.el7.x86_64
+gettext-0.19.8.1-2.el7.x86_64
+gettext-common-devel-0.19.8.1-2.el7.noarch
+gettext-libs-0.19.8.1-2.el7.x86_64
+
+*apacheインストール
+※事前に必要なrpmパッケージ
+# rpm -ivh openldap-devel-2.4.44-5.el7.x86_64.rpm cyrus-sasl-devel-2.1.26-21.el7.x86_64.rpm
+# ls -l /usr/lib64/libldap.so
+lrwxrwxrwx. 1 root root 21 11月 23 23:28 /usr/lib64/libldap.so -> libldap-2.4.so.2.10.7
+
+# rpm -ivh /mnt/Packages/pcre-devel-8.32-17.el7.x86_64.rpm
+# ls -l  /usr/lib64/libpcre.so
+lrwxrwxrwx. 1 root root 16 11月 23 23:32 /usr/lib64/libpcre.so -> libpcre.so.1.2.0
+
+# rpm -ivh libsepol-devel-2.5-6.el7.x86_64.rpm
+# rpm -ivh keyutils-libs-devel-1.5.8-3.el7.x86_64.rpm libcom_err-devel-1.42.9-10.el7.x86_64.rpm libselinux-devel-2.5-11.el7.x86_64.rpm libverto-devel-0.2.5-4.el7.x86_64.rpm
+# rpm -ivh openssl-devel-1.0.2k-8.el7.x86_64.rpm krb5-devel-1.15.1-8.el7.x86_64.rpm zlib-devel-1.2.7-17.el7.x86_64.rpm
+
+# rpm -ivh expat-devel-2.1.0-10.el7_3.x86_64.rpm
+
+※apacheインストール
+http://httpd.apache.org/
+http://apr.apache.org/
+# tar xzf httpd-2.4.37.tar.gz
+# cd httpd-2.4.37/srclib/
+# tar xzf ../../apr-1.6.5.tar.gz
+# tar xvf ../../apr-util-1.6.1.tar.gz
+# ln -s apr-1.6.5/ apr
+# ln -s apr-util-1.6.1/ apr-util
+# cd ../
+# ./configure --with-ldap --with-ldap-lib=/usr/lib64/openldap/ --enable-authnz-ldap --enable-ldap --with-included-apr --enable-ssl --with-mpm=prefork
+# echo $?
+0
+# make
+# make install
+# ls -l /usr/local/apache2/
+合計 56
+drwxr-xr-x.  2 root root 4096 11月 23 23:58 bin
+drwxr-xr-x.  2 root root 4096 11月 23 23:59 build
+drwxr-xr-x.  2 root root   78 11月 23 23:58 cgi-bin
+drwxr-xr-x.  4 root root   84 11月 23 23:58 conf
+drwxr-xr-x.  3 root root 4096 11月 23 23:58 error
+drwxr-sr-x.  2 root root   24 10月 18 23:33 htdocs
+drwxr-xr-x.  3 root root 8192 11月 23 23:58 icons
+drwxr-xr-x.  2 root root 8192 11月 23 23:59 include
+drwxr-xr-x.  4 root root 4096 11月 23 23:58 lib
+drwxr-xr-x.  2 root root    6 11月 23 23:58 logs
+drwxr-xr-x.  4 root root   30 11月 23 23:59 man
+drwxr-sr-x. 14 root root 8192 10月 18 23:34 manual
+drwxr-xr-x.  2 root root 4096 11月 23 23:58 modules
+
+* phpインストール
+※rpm
+# rpm -ivh xz-devel-5.2.2-1.el7.x86_64.rpm libxml2-devel-2.9.1-6.el7_2.3.x86_64.rpm
+
+# ln -s /usr/lib64/libldap.so /usr/lib/libldap.so
+# ln -s /usr/lib64/libldap_r.so /usr/lib/libldap_r.so
+
+http://php.net/
+# tar xzf php-7.2.12.tar.gz
+# cd php-7.2.12/
+# export LDFLAGS=-llber
+# ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-ldap --enable-xml --with-pcre-regex --with-gettext --enable-session --with-openssl --with-openssl-dir=/usr/lib64/openssl
+# make
+# make install
+# cp -p ./php.ini-production /usr/local/lib/php.ini
+
+# vi /usr/local/apache2/conf/httpd.conf
+追記) AddHandler php7-script .php
+
+* apacheを起動する
+# /usr/local/apache2/bin/apachectl start
+
+* phpLDAPadmin
+http://phpldapadmin.sourceforge.net
+http://dg-osslab.jugem.jp/?eid=42    ※パッチ
+
+# tar xzf ./phpldapadmin-1.2.3.tgz -C /usr/local
+# cp -p ./phpldapadmin-1.2.3-php5.5.patch /usr/local/phpldapadmin-1.2.3/
+# cd /usr/local/
+# patch -p0 < phpldapadmin-1.2.3/phpldapadmin-1.2.3-php5.5.patch
+patching file phpldapadmin-1.2.3/lib/PageRender.php
+patching file phpldapadmin-1.2.3/lib/ds_ldap.php
+patching file phpldapadmin-1.2.3/lib/functions.php
+
+# vi /usr/local/apache2/conf/httpd.conf
+Alias /ldapadmin/ /usr/local/phpldapadmin-1.2.3/htdocs/
+
+<Directory "/usr/local/phpldapadmin-1.2.3/htdocs">
+  Require all granted
+
+  DirectoryIndex index.php index.html
+</Directory>
+
+# /usr/local/apache2/bin/apachectl restart
+
+* phpLDAPadminの設定
+# cd /usr/local/phpldapadmin-1.2.3/config/
+# cp -p config.php.example config.php
+$servers->setValue('server','name','centos74.com');
+$servers->setValue('server','host','ldaps://127.0.0.1:636');
+$servers->setValue('server','port',0);
+$servers->setValue('server','base',array('dc=system,dc=com'));
+
+-- php makeの実行時に発生したエラー --
+/usr/bin/ld: ext/ldap/.libs/ldap.o: undefined reference to symbol 'ber_scanf'
+/usr/lib64/liblber-2.4.so.2: error adding symbols: DSO missing from command line
+collect2: error: ld returned 1 exit status
+make: *** [sapi/cli/php] エラー 1
+
+=====================================================================
+FAILED TEST SUMMARY
+---------------------------------------------------------------------
+Timeout within function [tests/basic/timeout_variation_1.phpt]
+Timeout within shutdown function, variation [tests/basic/timeout_variation_10.phpt]
+Timeout within array_walk [tests/basic/timeout_variation_2.phpt]
+Timeout within eval [tests/basic/timeout_variation_3.phpt]
+Timeout within call_user_func [tests/basic/timeout_variation_4.phpt]
+Timeout within function containing exception [tests/basic/timeout_variation_5.phpt]
+Timeout within shutdown function [tests/basic/timeout_variation_9.phpt]
+Timeout again inside register_shutdown_function [tests/lang/045.phpt]
+Bug #74093 (Maximum execution time of n+2 seconds exceed not written in error_log) [Zend/tests/bug74093.phpt]
+ldap_set_option() - ldap_set_option() operation that should fail [ext/ldap/tests/ldap_set_option_error.phpt]
+=====================================================================
