@@ -1,0 +1,199 @@
+<!doctype html>
+{% load static %}
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <title>Kenji Test</title>
+
+  {# --- css --- #}
+
+  {% block extra_css %}{% endblock %}
+
+</head>
+
+<body>
+<div class="ui container">
+  {% block content %}{% endblock %}
+</div>
+
+{# --- js --- #}
+{% block extra_js %}
+{% endblock %}
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#tblist').DataTable(
+      {
+        pageLength: 5,
+        lengthMenu: [[5, 10, -1], [5, 10, "All"]],
+        columnDefs: [{ "orderable":false, "targets":2 }],
+        stateSave: true,
+      }
+     );
+   });
+</script>
+<script src="../static/kent/jquery.selectlistactions.js"></script>
+
+<script>
+jQuery(function ($) {
+
+  // csrf値取得
+  var csrf = $("input[name=csrfmiddlewaretoken]").val();
+
+  // ページ読み込み時チェックボック状態チェック処理
+  var checkbox_selector = "input[type=checkbox][name='chk[]']";
+  var length = $(checkbox_selector).length;
+  var checked_length = $(checkbox_selector + ":checked").length;
+  if (length === checked_length) {
+      $("input[type=checkbox][name='allchk']").prop('checked', true);
+      console.log("すべてがチェックされています");
+  }
+
+  // ページネーションイベント処理
+  $('#tblist').on( 'draw.dt', function () {
+    var table = $('#tblist').DataTable();
+    var checkbox_selector = "input[type=checkbox][name='chk[]']";
+    var length = $(checkbox_selector).length;
+    console.log(length);
+    var checked_length = $(checkbox_selector + ":checked").length;
+    if (length === checked_length) {
+        $("input[type=checkbox][name='allchk']").prop('checked', true);
+        console.log("すべてがチェックされています");
+    } else {
+        $("input[type=checkbox][name='allchk']").prop('checked', false);
+    }
+
+    // ページネーション後js有効化する
+    location.reload()
+
+  });
+
+  // 全選択チェックイベント処理
+  $('#allchk').on('click', function() {
+    $("input[name='chk[]']").prop('checked', this.checked);
+    console.log("allchk clicked");
+  });
+
+  // チェック時イベント処理
+  $('input[name="chk[]"]').change(function() {
+    var checkbox_selector = "input[type=checkbox][name='chk[]']";
+    var length = $(checkbox_selector).length;
+    console.log(length);
+    var checked_length = $(checkbox_selector + ":checked").length;
+    if (length === checked_length) {
+        $("input[type=checkbox][name='allchk']").prop('checked', true);
+        console.log("すべてがチェックされています");
+    } else {
+        $("input[type=checkbox][name='allchk']").prop('checked', false);
+    }
+  });
+
+  // 登録ボタン押下時イベント処理
+  $("#regbtn").on("click", function () {
+
+    const all  = [];
+    const chkd = [];
+
+    $("input[type=checkbox][name='chk[]']").each(function() {
+      all.push($(this).val());
+    });
+
+    $("input[type=checkbox][name='chk[]']:checked").each(function() {
+      chkd.push($(this).val());
+    });
+
+    console.log(all);
+    console.log(chkd);
+
+    $.ajax({
+      url: "{% url 'kent:sendchk' %}",
+      type: "post",
+      dataType: "text",
+      data: {
+        "csrfmiddlewaretoken": csrf,
+        "all": all,
+        "chkd": chkd,
+      },
+
+      success: function (data) {
+       if (data.result==="OK") {
+         console.log(data.message);
+       } else {
+         console.log("失敗");
+       }
+      }
+    });
+
+  });
+
+  //
+  $('input[name=right]').on('click', function() {
+    move('s1', 's2');
+  });
+ 
+  $('input[name=left]').on('click', function() {
+    move('s2', 's1');
+  });
+ 
+  var move = function(_this, target) {
+    $('select[name=' + _this + '] option:selected').each(function() {
+      $('select[name=' + target + ']').append($(this).clone());
+      $(this).remove();
+    });
+  };
+
+  // グループメンバー登録ボタン押下時処理
+  $("#regmbr").on("click", function () {
+
+    var grpname = $("input[name=grpname]").val();
+
+    // メンバー選択側セレクトボックスを選択状態にする
+    $("select[name=s2] option").prop("selected",true);
+
+    // 選択状態の値を取得する
+    const grpmbr = [];
+    $("select[name=s2]").each(function() {
+      var recid = String($(this).val())
+      console.log(recid);
+      grpmbr.push(recid);
+    });
+    console.log(grpmbr);
+
+    // 取得した値(アカウントid)をpostする
+    $.ajax({
+      url: "{% url 'kent:sendmbr' %}",
+      type: "post",
+      dataType: "json",
+      data: {
+        "csrfmiddlewaretoken": csrf,
+        "grpname": grpname,
+        "grpmbr" : grpmbr,
+      },
+      success: function (data) {
+        if (data.result === "success") {
+          console.log(data.message);
+        } else {
+          console.log(data.errmsg);
+        }
+      }
+    });
+
+  });
+
+});
+</script>
+</body>
+
+</html>
